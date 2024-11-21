@@ -6,8 +6,6 @@
 #include "stack.h"
 #include "parser.h"
 #include "testy.h"
-#include "codegen.h"
-#include "ast.h"
 #include "symTable.h"
 
  const int LL_TABLE[22][43] = 
@@ -531,21 +529,18 @@ void processValue(int value, TStack *stack) {
  * @param stack A pointer to a TStack structure used to manage non-terminal and terminal symbols.
  * @return A boolean indicating whether the syntax is valid (true) or invalid (false).
  */
-bool find_rule(LexerContext *context, TStack *stack, ast_node_t *tree) {
+bool find_rule(LexerContext *context, TStack *stack) {
     Token token;
     stackSymbol *rule_stack;
     bool ok_syntax = true;
 
     Push_T_NT(stack, N_PROGRAM);
-    int i=0; // debugovacia promenna
     
     // Načti první token před vstupem do smyčky
     token = get_token(context);
     print_test(token);
-    // vložení tokenu do stromu
-    ast_insert(tree, token);
+
     while (!IsEmpty(stack)){ // asi to bude token eof ale neviem este 
-    //while(i<12){
         rule_stack = Top(stack);
         if (rule_stack->isTerm == 0){ //ak je na vrchole zasobnika Neterminal nahradi sa za dalsie pravidlo z LL tabulky
             //print_LLtable (token, rule_stack->value + __TOKENEND__ + 1);
@@ -554,12 +549,9 @@ bool find_rule(LexerContext *context, TStack *stack, ast_node_t *tree) {
         } else {
             if (rule_stack->value == (int)token.type){
                 Pop(stack, free_stackSymbol);
-                // Pokud chces jeste ponechat token, tak tuto lajnu vymaz, maze token
-                if (token.type == TOKEN_STRING_LITERAL) {free_array(&token.value.arr);}
+
                 token = get_token(context);
                 print_test(token);
-                ast_insert(tree, token);
-
             } else {
                 ok_syntax = false;
                 error_exit(ERR_SYNTAX, "zle poradie tokenov\n");
@@ -575,59 +567,25 @@ bool find_rule(LexerContext *context, TStack *stack, ast_node_t *tree) {
 }
 
 int main() {
-
-    
-    
-
     LexerContext context;
     initialize_context(&context, "ez.txt");
 
     TStack stack;
     stack_init(&stack);
 
-    ast_node_t *AST = malloc(sizeof(ast_node_t));
-    if (AST == NULL) {
-        printf("Malloc error\n");
-        return 1;
-    }
-    ast_init(AST);
-
-    if (find_rule(&context, &stack, AST)){
+    if (find_rule(&context, &stack)){
         printf("VALID\n");
     } else {
         printf("PICE\n");
     }
 
-    // výpis obsahu v jazyku IFJcode24
-    print_content(AST);
-
-    // vypis ast (pomocí Pre-order průchodu)
-    // ast_print(AST);
-
-    // smazání a uvolnění celého ast
-    ast_dispose(AST);
-
-    // Uzavření lexikálního analyzátoru
+    // Closing lexer
     close_context(&context);
     
-    // Uzavření stacku
+    // Closing stack
     stack_dtor(&stack, free_stackSymbol);
 
-//---------------------------- Ciste jen ukazka, vymaze se pak (LinkedSymTable se da nahoru samozrejme)
-    Symbol *sym;
-    LinkedSymTable *table = malloc(sizeof(LinkedSymTable));
-    initTable(table);
 
-    enterScope(table);
-    addSymbol(table->top, "x1", INT, true, true, false);
-    sym = findSymbol(table, "x1");
-    if (sym) {
-        printf("%s was found\n", sym->name);
-    }
-
-    exitScope(table);
-    free(table);
-//----------------------------
 
     return 0;
 }
