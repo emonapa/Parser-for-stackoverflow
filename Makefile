@@ -2,7 +2,7 @@
 TARGET = program
 
 # Seznam objektových souborů
-OBJECTS = parser.o expand_array.o lexer.o error.o stack.o testy.o front.o codegen.o ast.o symTable.o
+OBJECTS = parser.o expand_array.o lexer.o error.o stack.o testy.o front.o symTable.o
 
 # Kompilátor
 CC = gcc
@@ -41,14 +41,6 @@ testy.o: testy.c testy.h
 # Pravidlo pro kompilaci front.c do front.o
 front.o: front.c front.h error.h stack.h
 	$(CC) $(CFLAGS) -c front.c -o front.o
-
-# Pravidlo pro kompilaci codegen.c do codegen.o
-codegen.o: codegen.c codegen.h
-	$(CC) $(CFLAGS) -c codegen.c -o codegen.o
-
-# Pravidlo pro kompilaci front.c do front.o
-ast.o: ast.c ast.h parser.h
-	$(CC) $(CFLAGS) -c ast.c -o ast.o
 
 # Pravidlo pro kompilaci front.c do front.o
 symTable.o: symTable.c symTable.h error.h
